@@ -1,122 +1,441 @@
-.receipt-page {
-  width: 700px;          /* Safe width for A4 */
-  padding: 32px;         /* Reduce padding */
+/* =========================================================
+   MONEY RECEIPT – A4 landscape, 10mm PDF margin
+   Usable width: 277mm. Design ratio follows the reference image.
+   NOTE: html2canvas does NOT support clip-path, so all slanted
+   shapes are inline SVG in the JSX.
+
+   TEXT / UNDERLINE RULE (fixes "text sinking into the line"):
+   Never give a text field a fixed height equal to its line-height.
+   Every field uses: line-height + padding-bottom + border-bottom,
+   so the text always sits ~1.3mm ABOVE the dotted underline.
+   ========================================================= */
+
+.money-receipt {
+  width: 277mm;
+  height: 148mm;
   box-sizing: border-box;
-  background: white;
-  font-family: "Segoe UI", Arial, sans-serif;
-  color: #111;
-  border: 3px solid #db071d;
-  box-shadow: 0 0 12px rgba(0,0,0,0.15);
-}
-.receipt-page {
-  overflow-x: hidden;
+  position: relative;
+  margin: 0 auto;
+  overflow: hidden;
+  background: #ffffff;
+  color: #0b2b52;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
 }
 
-/* HEADER */
-.receipt-header {
-  display: flex;
+.money-receipt * {
+  box-sizing: border-box;
+}
+
+.mr-pad {
+  padding-left: 10mm;
+  padding-right: 10mm;
+}
+
+/* ---------------- TOP STRIP ---------------- */
+.mr-top-strip {
+  display: block;
+  width: 277mm;
+  height: 9.5mm;
+}
+
+/* ---------------- HEADER ---------------- */
+.mr-header {
+  display: grid;
+  grid-template-columns: 31% 42% 27%;
   align-items: center;
-  border-bottom: 2px solid #db071d;
-  padding-bottom: 15px;
-  margin-bottom: 20px;
+  height: 29mm;
 }
 
-.receipt-logo img {
-  max-width: 80px;
+.mr-brand {
+  padding-left: 0;
+}
+
+.mr-logo {
+  display: block;
+  width: 50mm;
   height: auto;
-  margin-right: 20px;
+  max-height: 21mm;
+  object-fit: contain;
+  object-position: left center;
 }
 
-.receipt-company {
-  font-size: 12px;
-  line-height: 1.4;
+.mr-tagline {
+  margin-top: 1mm;
+  font-size: 2.1mm;
+  line-height: 3mm;
+  font-weight: 700;
+  letter-spacing: 0.8mm;
+  color: #082d55;
+  white-space: nowrap;
 }
 
-/* TITLE */
-.receipt-title-box {
+.mr-tagline span {
+  color: #e9a400;
+  margin: 0 0.6mm;
+}
+
+.mr-title-wrap {
   text-align: center;
-  margin: 20px 0;
-  background: #db071d;
-  color: white;
-  padding: 8px 0;
-  letter-spacing: 4px;
-  font-size: 18px;
+  white-space: nowrap;
 }
 
-/* META */
-.receipt-meta {
-  display: flex;
-  justify-content: space-between;
-  margin: 20px 0;
-  font-size: 13px;
-  border-bottom: 1px dashed #999;
-  padding-bottom: 10px;
+.mr-title {
+  font-size: 12mm;
+  line-height: 14mm;
+  height: 14mm;
+  font-weight: 800;
+  letter-spacing: 0.2mm;
 }
 
-/* TEXT */
-.receipt-text {
-  font-size: 14px;
-  margin: 12px 0;
+.mr-title-navy {
+  color: #0a3763;
 }
 
-/* DETAILS TABLE STYLE */
-.receipt-details-box {
-  border: 1px solid #ccc;
-  margin-top: 15px;
+.mr-title-gold {
+  color: #f5a000;
 }
 
-.receipt-details-box div {
-   display: grid;
-  grid-template-columns: 160px 1fr;
-  border-bottom: 1px solid #ddd;
-}
-.receipt-details-box span {
-  word-break: break-word;
-}
-
-.receipt-details-box div span {
-  padding: 8px 10px;
-  font-size: 13px;
-}
-
-.receipt-details-box div span:first-child {
-  background: #f8f8f8;
+.mr-subtitle {
+  margin-top: 1.5mm;
+  font-size: 2.7mm;
+  line-height: 4mm;
   font-weight: 600;
+  letter-spacing: 1.55mm;
+  color: #14385c;
+  white-space: nowrap;
 }
 
-/* NOTE */
-.receipt-note-box {
-  margin-top: 25px;
-  padding: 12px;
-  background: #fff6f6;
-  border-left: 4px solid #db071d;
-  font-size: 12.5px;
-  line-height: 1.6;
+.mr-title-line {
+  width: 25mm;
+  height: 0.5mm;
+  margin: 2mm auto 0;
+  background: #f5a000;
 }
 
-/* FOOTER */
-.receipt-footer {
-  margin-top: 40px;
+.mr-office {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  color: #0a3159;
+}
+
+.mr-pin {
+  flex: 0 0 auto;
+  width: 5.5mm;
+  height: 7.3mm;
+  margin-top: 0.8mm;
+  margin-right: 3mm;
+}
+
+.mr-office-title {
+  font-size: 3.6mm;
+  line-height: 5mm;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.mr-office-address {
+  font-size: 3mm;
+  line-height: 5mm;
+  white-space: nowrap;
+}
+
+/* ---------------- RECEIPT NO + DATE ---------------- */
+.mr-meta {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
+  height: 8.5mm;
+  padding-bottom: 0.8mm;
 }
 
-.receipt-signature p {
-  border-top: 1px solid #000;
-  width: 180px;
+.mr-meta-item {
+  display: flex;
+  align-items: flex-end;
+}
+
+.mr-meta-label {
+  font-size: 3.9mm;
+  line-height: 5mm;
+  padding-bottom: 1.3mm;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #0a3159;
+}
+
+.mr-meta-line {
+  display: block;
+  margin-left: 1.5mm;
+  width: 42mm;
+  padding-bottom: 1.3mm;
+  line-height: 5mm;
+  font-size: 3.4mm;
+  border-bottom: 0.4mm dotted #7d8996;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #111f33;
+}
+
+.mr-meta-line-right {
+  width: 44mm;
+}
+
+/* ---------------- ORANGE DIVIDER ---------------- */
+.mr-divider {
+  width: 277mm;
+  height: 1.6mm;
+  background: #f5a000;
+}
+
+/* ---------------- FORM ROWS ---------------- */
+.mr-body {
+  padding-top: 0.8mm;
+}
+
+.mr-row {
+  display: grid;
+  grid-template-columns: 57mm 5mm minmax(0, 1fr);
+  align-items: end;
+  height: 8.7mm;
+  font-size: 3.7mm;
+  color: #0c2e55;
+}
+
+.mr-row > * {
+  min-width: 0;
+}
+
+.mr-label {
+  line-height: 5mm;
+  padding-bottom: 1.3mm;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.mr-colon {
+  line-height: 5mm;
+  padding-bottom: 1.3mm;
+  font-weight: 500;
+}
+
+/* Value text sits ABOVE the dotted underline */
+.mr-value {
+  line-height: 5mm;
+  padding-bottom: 1.3mm;
+  border-bottom: 0.4mm dotted #7d8996;
+  overflow: hidden;
+  white-space: nowrap;
+  color: #111f33;
+}
+
+.mr-value-branch {
+  width: 58%;
+}
+
+.mr-value-amount {
+  line-height: 5.4mm;
+}
+
+.mr-rupee {
+  font-size: 4.2mm;
+  font-weight: 700;
+  margin-right: 2.5mm;
+}
+
+.mr-amount-strong {
+  font-size: 4.2mm;
+  font-weight: 800;
+}
+
+/* ---------------- PAYMENT MODE ---------------- */
+.mr-options {
+  display: flex;
+  align-items: flex-end;
+  padding-bottom: 1.3mm;
+  white-space: nowrap;
+}
+
+.mr-option {
+  display: flex;
+  align-items: center;
+  margin-right: 8mm;
+}
+
+.mr-checkbox {
+  display: block;
+  width: 3.8mm;
+  height: 3.8mm;
+  margin-right: 2mm;
+  padding: 0.2mm;
+  border: 0.35mm solid #738197;
+  flex: 0 0 auto;
+}
+
+.mr-option-text {
+  font-size: 3.7mm;
+  line-height: 5mm;
+}
+
+/* underline for "Other" – lines up with the other underlines */
+.mr-other-line {
+  display: block;
+  flex: 0 0 62mm;
+  margin-left: 2mm;
+  margin-bottom: -1.3mm;
+  padding-bottom: 1.3mm;
+  line-height: 5mm;
+  border-bottom: 0.4mm dotted #7d8996;
+  overflow: hidden;
+  font-size: 3.4mm;
+  color: #111f33;
+}
+
+/* ---------------- TRANSACTION ROW ---------------- */
+.mr-row-txn {
+  grid-template-columns: 57mm 5mm minmax(0, 1fr) 36mm 4mm 44mm;
+}
+
+.mr-pay-date-label {
+  padding-left: 6mm;
+}
+
+/* ---------------- BOTTOM: AMOUNT BOX + SIGNATURES ---------------- */
+.mr-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-top: 1.5mm;
+}
+
+.mr-amount-box {
+  display: flex;
+  width: 128mm;
+  height: 15mm;
+  border: 0.4mm solid #f0b01a;
+  border-radius: 1.8mm;
+  background: #fff3de;
+  overflow: hidden;
+}
+
+.mr-amount-box-rupee {
+  flex: 0 0 17mm;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5a000;
+  color: #082d54;
+  font-size: 9mm;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.mr-amount-box-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 3mm 0 7mm;
+  min-width: 0;
+}
+
+.mr-amount-box-label {
+  flex: 0 0 auto;
+  font-size: 4.9mm;
+  line-height: 1.2;
+  font-weight: 800;
+  color: #0a3159;
+  white-space: nowrap;
+  margin-right: 4mm;
+}
+
+.mr-amount-box-value {
+  flex: 1;
+  min-width: 0;
+  height: 9.6mm;
+  display: flex;
+  align-items: center;
+  padding: 0 3mm;
+  background: #ffffff;
+  border: 0.35mm solid #0a2a5c;
+  font-size: 4mm;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #111f33;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.mr-signatures {
+  display: flex;
+}
+
+.mr-signature {
+  width: 44mm;
   text-align: center;
-  margin-bottom: 5px;
-  font-size: 12px;
+  color: #0b2d52;
 }
 
-.receipt-signature span {
-  font-size: 12px;
+.mr-signature + .mr-signature {
+  margin-left: 22mm;
+}
+
+.mr-signature-line {
+  height: 8mm;
+  border-bottom: 0.4mm dotted #526277;
+}
+
+.mr-signature-label {
+  margin-top: 1.5mm;
+  font-size: 3.5mm;
+  line-height: 5mm;
+  white-space: nowrap;
+}
+
+/* ---------------- LEGAL NOTE ---------------- */
+.mr-legal {
+  margin-top: 2.5mm;
+  padding: 1.6mm 3mm;
+  border-left: 1mm solid #f5a000;
+  background: #fffaf0;
+  color: #3d4652;
+  font-size: 2.2mm;
+  line-height: 3.2mm;
+}
+
+/* ---------------- FOOTER ---------------- */
+.mr-footer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 277mm;
+  height: 9.5mm;
+}
+
+.mr-footer-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 277mm;
+  height: 9.5mm;
+}
+
+.mr-footer-text {
+  position: absolute;
+  right: 10mm;
+  top: 0;
+  height: 9.5mm;
+  line-height: 9.5mm;
+  color: #ffffff;
+  font-size: 2.5mm;
   font-weight: 600;
+  letter-spacing: 1.1mm;
+  white-space: nowrap;
 }
 
-.receipt-disclaimer {
-  font-size: 11px;
-  color: #555;
-  text-align: right;
+@media print {
+  .money-receipt {
+    border: none;
+    box-shadow: none;
+    page-break-after: avoid;
+  }
 }

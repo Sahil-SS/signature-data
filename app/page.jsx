@@ -310,7 +310,8 @@ export default function BookingForm() {
                     />
                   </Icon>
                 </span>
-                1st Floor, AH45, Krishna Reddy Industrial Estate, Dooravani Nagar, Bengaluru, Karnataka - 560016
+                1st Floor, AH45, Krishna Reddy Industrial Estate, Dooravani
+                Nagar, Bengaluru, Karnataka - 560016
               </p>
               <p className="flex items-start gap-1.5">
                 <span style={{ color: NAVY }}>
@@ -326,7 +327,10 @@ export default function BookingForm() {
         </header>
 
         {/* ================= FORM ================= */}
-        <form onSubmit={handleSubmit} className="px-4 sm:px-9 pb-0 space-y-9 pt-10">
+        <form
+          onSubmit={handleSubmit}
+          className="px-4 sm:px-9 pb-0 space-y-9 pt-10"
+        >
           {/* ---------- Associate Details ---------- */}
           <SectionCard
             badge={icons.user}
@@ -723,16 +727,23 @@ export default function BookingForm() {
           {/* ================= FOOTER ================= */}
           <div className="relative -mx-4 sm:-mx-9 mt-2">
             {/* Proceed button sits on the footer edge */}
+            {/* Proceed button sits on the footer edge */}
             <div className="relative z-20 flex justify-center -mb-4">
               <button
                 type="submit"
                 disabled={!termsAccepted}
-                className={`px-10 py-2 bg-white text-black text-[26px] font-bold transition-opacity ${
+                className={`px-10 py-2 text-[26px] font-bold rounded-md border-2 transition-colors duration-200 ${
                   termsAccepted
-                    ? "cursor-pointer hover:bg-slate-50"
-                    : "cursor-not-allowed opacity-60"
+                    ? "cursor-pointer text-white hover:brightness-125"
+                    : "cursor-not-allowed bg-white text-slate-400 border-slate-300"
                 }`}
-                style={{ fontFamily: "Arial, sans-serif" }}
+                style={{
+                  fontFamily: "Arial, sans-serif",
+                  ...(termsAccepted && {
+                    backgroundColor: NAVY,
+                    borderColor: GOLD,
+                  }),
+                }}
               >
                 Proceed To Pay
               </button>
@@ -767,11 +778,17 @@ export default function BookingForm() {
               </div>
 
               <div className="absolute inset-x-0 bottom-9 flex items-center justify-center gap-4 text-white">
-                <span className="hidden sm:block h-px w-20" style={{ background: GOLD }} />
+                <span
+                  className="hidden sm:block h-px w-20"
+                  style={{ background: GOLD }}
+                />
                 <span className="text-[13px] tracking-[0.3em] font-medium">
                   TOGETHER FOR A BRIGHTER TOMORROW
                 </span>
-                <span className="hidden sm:block h-px w-20" style={{ background: GOLD }} />
+                <span
+                  className="hidden sm:block h-px w-20"
+                  style={{ background: GOLD }}
+                />
               </div>
             </div>
           </div>
