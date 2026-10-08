@@ -21,6 +21,7 @@ import {
   Download,
   QrCode,
   ShieldCheck,
+  User,
 } from "lucide-react";
 
 import MoneyReceiptTemplate from "@/components/MoneyReceiptTemplate";
@@ -965,21 +966,21 @@ export default function PaymentClient() {
                   transition={{ delay: 0.8 }}
                   className="overflow-hidden rounded-[18px] border border-[#d5e1ec] bg-white"
                 >
-                  {/* Receipt */}
+                  {/* Name */}
 
                   <div className="flex items-center gap-4 border-b border-[#e1e7ed] px-5 py-3 md:px-6">
                     <div className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full bg-[#e9edff] text-[#164995]">
-                      <ReceiptText size={25} strokeWidth={2} />
+                      <User size={25} strokeWidth={2} />
                     </div>
 
-                    <div>
-                      <h3 className="text-[17px] font-bold text-[#102746] md:text-[19px]">
-                        Receipt Downloaded
-                      </h3>
+                    <div className="grid flex-1 grid-cols-1 gap-2 md:grid-cols-[1fr_auto] md:items-center md:gap-4">
+                      <span className="text-[15px] font-semibold text-[#102746] md:text-[17px]">
+                        Name
+                      </span>
 
-                      <p className="mt-1 text-[13px] text-[#65758c]">
-                        A copy of your payment receipt has been saved.
-                      </p>
+                      <strong className="break-words text-[17px] font-bold text-[#102746] md:text-[20px]">
+                        {customerName}
+                      </strong>
                     </div>
                   </div>
 
