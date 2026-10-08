@@ -1,218 +1,318 @@
 import "./receipt.css";
 
-const MODES = ["UPI", "NEFT", "IMPS", "Cash", "Other"];
+const ONES = [
+  "",
+  "One",
+  "Two",
+  "Three",
+  "Four",
+  "Five",
+  "Six",
+  "Seven",
+  "Eight",
+  "Nine",
+  "Ten",
+  "Eleven",
+  "Twelve",
+  "Thirteen",
+  "Fourteen",
+  "Fifteen",
+  "Sixteen",
+  "Seventeen",
+  "Eighteen",
+  "Nineteen",
+];
 
-function formatAmount(value) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n.toLocaleString("en-IN") : value;
+const TENS = [
+  "",
+  "",
+  "Twenty",
+  "Thirty",
+  "Forty",
+  "Fifty",
+  "Sixty",
+  "Seventy",
+  "Eighty",
+  "Ninety",
+];
+
+function twoDigitWords(num) {
+  if (num < 20) return ONES[num];
+
+  const tens = Math.floor(num / 10);
+  const ones = num % 10;
+
+  return `${TENS[tens]}${ones ? ` ${ONES[ones]}` : ""}`;
 }
 
-export default function MoneyReceiptTemplate({ data }) {
-  const paymentMode = String(data?.paymentMode || "UPI");
-  const amount = formatAmount(data?.amount || "0");
-  const amountWords = data?.amountWords || "";
-  const paymentDate = data?.paymentDate || data?.date || "";
-  const receiptNo = data?.receiptNo || "";
-  const name = data?.name || "";
-  const branch = data?.branch || "";
-  const projectName = data?.projectName || "";
-  const transactionId = data?.transactionId || "";
+function threeDigitWords(num) {
+  if (num < 100) {
+    return twoDigitWords(num);
+  }
 
-  // Anything that is not UPI / NEFT / IMPS / Cash is treated as "Other"
-  const knownModes = ["upi", "neft", "imps", "cash"];
-  const normalized = paymentMode.toLowerCase();
-  const selectedMode = knownModes.includes(normalized) ? normalized : "other";
+  const hundreds = Math.floor(num / 100);
+  const remainder = num % 100;
+
+  return `${ONES[hundreds]} Hundred${
+    remainder ? ` ${twoDigitWords(remainder)}` : ""
+  }`;
+}
+
+function indianNumberToWords(value) {
+  const num = Math.floor(Number(value) || 0);
+
+  if (num === 0) {
+    return "Zero";
+  }
+
+  const crore = Math.floor(num / 10000000);
+  const lakh = Math.floor((num % 10000000) / 100000);
+  const thousand = Math.floor((num % 100000) / 1000);
+  const remainder = num % 1000;
+
+  const parts = [];
+
+  if (crore) {
+    parts.push(`${threeDigitWords(crore)} Crore`);
+  }
+
+  if (lakh) {
+    parts.push(`${twoDigitWords(lakh)} Lakh`);
+  }
+
+  if (thousand) {
+    parts.push(`${twoDigitWords(thousand)} Thousand`);
+  }
+
+  if (remainder) {
+    if (parts.length > 0) {
+      parts.push(`and ${threeDigitWords(remainder)}`);
+    } else {
+      parts.push(threeDigitWords(remainder));
+    }
+  }
+
+  return parts.join(" ");
+}
+
+function formatAmount(value) {
+  const number = Number(value) || 0;
+
+  return number.toLocaleString("en-IN", {
+    maximumFractionDigits: 0,
+  });
+}
+
+export default function MoneyReceiptTemplate({ data = {} }) {
+  const paymentMode = data.paymentMode || "UPI";
+
+  const numericAmount = Number(data.amount || 0);
+
+  const amount = formatAmount(numericAmount);
+
+  const amountWords =
+    data.amountWords?.trim() || indianNumberToWords(numericAmount);
+
+  const paymentDate = data.paymentDate || data.date || "";
+
+  const receiptNo = data.receiptNo || "";
+
+  const name = data.name || "";
+
+  const projectName =
+    data.projectName || "Signature Associate Membership Program";
+
+  const transactionId = data.transactionId || "";
+
+  const paymentModes = ["UPI", "NEFT", "IMPS", "Cash", "Cheque", "Other"];
 
   return (
     <div id="receipt" className="money-receipt">
-      {/* ================= TOP STRIP ================= */}
-      <svg
-        className="mr-top-strip"
-        viewBox="0 0 277 9.5"
-        preserveAspectRatio="none"
-      >
-        <polygon points="0,0 93.5,0 86,9.5 0,9.5" fill="#07355b" />
-        <polygon points="99.5,0 277,0 277,9.5 91,9.5" fill="#f5a000" />
-      </svg>
+      {/* =========================================================
+          TOP BRAND STRIP
+          ========================================================= */}
 
-      {/* ================= HEADER ================= */}
-      <div className="mr-pad mr-header">
-        <div className="mr-brand">
-          <img src="/logo.jpeg" alt="Signature" className="mr-logo" />
-          <div className="mr-tagline">
-            GROW TOGETHER <span>|</span> BUILD TOMORROW
+      <div className="receipt-top-strip">
+        <div className="receipt-top-navy" />
+        <div className="receipt-top-gold" />
+      </div>
+
+      {/* =========================================================
+          HEADER
+          ========================================================= */}
+
+      <header className="receipt-header">
+        {/* Logo */}
+        <div className="receipt-brand">
+          <img
+            src="/logo.jpeg"
+            alt="Signature Associates"
+            className="receipt-logo"
+          />
+
+          <div className="receipt-tagline">
+            REAL ESTATE
+            <span>|</span>
+            INVESTMENT
+            <span>|</span>
+            TOGETHER FOR A BETTER TOMORROW
           </div>
         </div>
 
-        <div className="mr-title-wrap">
-          <div className="mr-title">
-            <span className="mr-title-navy">MONEY</span>{" "}
-            <span className="mr-title-gold">RECEIPT</span>
-          </div>
-          <div className="mr-subtitle">ASSOCIATE MEMBERSHIP PROGRAM</div>
-          <div className="mr-title-line"></div>
+        {/* Heading */}
+        <div className="receipt-heading">
+          <h1>
+            PAYMENT <span>RECEIPT</span>
+          </h1>
+
+          <div className="receipt-subtitle">ASSOCIATE MEMBERSHIP PROGRAM</div>
+
+          <div className="receipt-title-line" />
         </div>
 
-        <div className="mr-office">
-          <svg className="mr-pin" viewBox="0 0 24 32">
-            <path
-              d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z"
-              fill="#f2a900"
-            />
-            <circle cx="12" cy="12" r="5" fill="#07355b" />
-          </svg>
-          <div className="mr-office-text">
-            <div className="mr-office-title">Registered Office</div>
-            <div className="mr-office-address">RDB Boulevard, 8th Floor,</div>
-            <div className="mr-office-address">
-              Salt Lake, Sec-V, Kolkata - 91
-            </div>
-          </div>
+        {/* Empty right side intentionally.
+            The reference image does not contain a registered-office block. */}
+        <div className="receipt-header-spacer" />
+      </header>
+
+      {/* =========================================================
+          RECEIPT META
+          ========================================================= */}
+
+      <div className="receipt-meta-row">
+        <div className="receipt-meta-item">
+          <strong>Receipt No.</strong>
+          <span>{receiptNo}</span>
+        </div>
+
+        <div className="receipt-meta-item receipt-meta-date">
+          <strong>Date</strong>
+          <span>{paymentDate}</span>
         </div>
       </div>
 
-      {/* ================= RECEIPT NO + DATE ================= */}
-      <div className="mr-pad mr-meta">
-        <div className="mr-meta-item">
-          <span className="mr-meta-label">Receipt No. :</span>
-          <span className="mr-meta-line mr-meta-line-left">{receiptNo}</span>
-        </div>
-        <div className="mr-meta-item">
-          <span className="mr-meta-label">Date :</span>
-          <span className="mr-meta-line mr-meta-line-right">{paymentDate}</span>
-        </div>
-      </div>
+      {/* Orange divider */}
+      <div className="receipt-divider" />
 
-      {/* ================= ORANGE DIVIDER ================= */}
-      <div className="mr-divider"></div>
+      {/* =========================================================
+          MAIN RECEIPT INFORMATION
+          ========================================================= */}
 
-      {/* ================= FORM ROWS ================= */}
-      <div className="mr-pad mr-body">
-        <div className="mr-row">
-          <div className="mr-label">Received with thanks from</div>
-          <div className="mr-colon">:</div>
-          <div className="mr-value">{name}</div>
+      <section className="receipt-body">
+        {/* Received From */}
+        <div className="receipt-row">
+          <div className="receipt-label">Received with thanks from</div>
+
+          <div className="receipt-colon">:</div>
+
+          <div className="receipt-value">{name}</div>
         </div>
 
-        <div className="mr-row">
-          <div className="mr-label">Amount</div>
-          <div className="mr-colon">:</div>
-          <div className="mr-value mr-value-amount">
-            <span className="mr-rupee">₹</span>
-            <strong className="mr-amount-strong">{amount}</strong>
+        {/* Amount */}
+        <div className="receipt-row">
+          <div className="receipt-label">Amount</div>
+
+          <div className="receipt-colon">:</div>
+
+          <div className="receipt-value amount-value">
+            <span className="rupee-symbol">₹</span>
+
+            <strong>{amount}/-</strong>
           </div>
         </div>
 
-        <div className="mr-row">
-          <div className="mr-label">In words</div>
-          <div className="mr-colon">:</div>
-          <div className="mr-value">
-            {amountWords ? `Rupees ${amountWords} only` : ""}
-          </div>
+        {/* Amount in words */}
+        <div className="receipt-row">
+          <div className="receipt-label">In words</div>
+
+          <div className="receipt-colon">:</div>
+
+          <div className="receipt-value">{amountWords} Only.</div>
         </div>
 
-        <div className="mr-row">
-          <div className="mr-label">For</div>
-          <div className="mr-colon">:</div>
-          <div className="mr-value">
+        {/* For */}
+        <div className="receipt-row">
+          <div className="receipt-label">For</div>
+
+          <div className="receipt-colon">:</div>
+
+          <div className="receipt-value">
             Associate Membership Fee for {projectName}
           </div>
         </div>
 
-        <div className="mr-row">
-          <div className="mr-label">Branch</div>
-          <div className="mr-colon">:</div>
-          <div className="mr-value mr-value-branch">{branch}</div>
-        </div>
+        {/* Payment Mode */}
+        <div className="receipt-row payment-mode-row">
+          <div className="receipt-label">Mode of Payment</div>
 
-        <div className="mr-row">
-          <div className="mr-label">Mode of Payment</div>
-          <div className="mr-colon">:</div>
-          <div className="mr-options">
-            {MODES.map((mode) => {
-              const selected = selectedMode === mode.toLowerCase();
+          <div className="receipt-colon">:</div>
+
+          <div className="payment-options">
+            {paymentModes.map((mode) => {
+              const isSelected =
+                paymentMode.toLowerCase() === mode.toLowerCase();
+
               return (
-                <div className="mr-option" key={mode}>
-                  <span className="mr-checkbox">
-                    {selected && (
-                      <svg viewBox="0 0 10 10" width="100%" height="100%">
-                        <path
-                          d="M1.6 5.4l2.4 2.4 4.4-5.6"
-                          stroke="#0b3155"
-                          strokeWidth="1.5"
-                          fill="none"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                    )}
+                <span className="payment-option" key={mode}>
+                  <span
+                    className={`payment-checkbox ${
+                      isSelected ? "checked" : ""
+                    }`}
+                  >
+                    {isSelected ? "✓" : ""}
                   </span>
-                  <span className="mr-option-text">{mode}</span>
-                </div>
+
+                  {mode}
+                </span>
               );
             })}
-            <span className="mr-other-line">
-              {selectedMode === "other" ? paymentMode : ""}
-            </span>
           </div>
         </div>
 
-        <div className="mr-row mr-row-txn">
-          <div className="mr-label">Transaction ID / UTR No.</div>
-          <div className="mr-colon">:</div>
-          <div className="mr-value">{transactionId}</div>
-          <div className="mr-label mr-pay-date-label">Payment Date</div>
-          <div className="mr-colon">:</div>
-          <div className="mr-value">{paymentDate}</div>
+        {/* Transaction + Payment Date */}
+        <div className="receipt-row transaction-row">
+          <div className="receipt-label">Transaction ID / UTR No.</div>
+
+          <div className="receipt-colon">:</div>
+
+          <div className="receipt-value transaction-value">{transactionId}</div>
+
+          <div className="payment-date-label">Payment Date</div>
+
+          <div className="receipt-colon payment-date-colon">:</div>
+
+          <div className="receipt-value payment-date-value">{paymentDate}</div>
         </div>
+      </section>
+
+      {/* =========================================================
+          LEGAL NOTE
+          ========================================================= */}
+
+      <section className="receipt-legal-note">
+        The amount received is towards the Signature Associate Membership
+        Program and shall not be treated as a Fixed Deposit, Investment Scheme,
+        Loan Arrangement, Financial Product, Profit-Sharing Arrangement, or
+        Interest-Bearing Instrument. Membership benefits and adjustments shall
+        be governed by the company&apos;s prevailing policies and terms &amp;
+        conditions.
+      </section>
+
+      {/* Computer generated note */}
+      <div className="receipt-generated-note">
+        This is a computer generated receipt, hence no signature is required.
       </div>
 
-      {/* ================= AMOUNT BOX + SIGNATURES ================= */}
-      <div className="mr-pad mr-bottom">
-        <div className="mr-amount-box">
-          <div className="mr-amount-box-rupee">₹</div>
-          <div className="mr-amount-box-content">
-            <div className="mr-amount-box-label">Amount :</div>
-            <div className="mr-amount-box-value">{amount}</div>
-          </div>
-        </div>
+      {/* =========================================================
+          FOOTER
+          ========================================================= */}
 
-        <div className="mr-signatures">
-          <div className="mr-signature">
-            <div className="mr-signature-line"></div>
-            <div className="mr-signature-label">Received by</div>
-          </div>
-          <div className="mr-signature">
-            <div className="mr-signature-line"></div>
-            <div className="mr-signature-label">Authorized Signature</div>
-          </div>
-        </div>
-      </div>
+      <footer className="receipt-footer">
+        <div className="footer-navy" />
+        <div className="footer-gold" />
 
-      {/* ================= LEGAL NOTE ================= */}
-      <div className="mr-pad">
-        <div className="mr-legal">
-          The amount received is towards the Signature Associate Membership
-          Program and shall not be treated as a Fixed Deposit, Investment
-          Scheme, Loan Arrangement, Financial Product, Profit-Sharing
-          Arrangement, or Interest-Bearing Instrument. Membership benefits and
-          adjustments shall be governed by the company&apos;s prevailing
-          policies and terms &amp; conditions.
-        </div>
-      </div>
-
-      {/* ================= FOOTER ================= */}
-      <div className="mr-footer">
-        <svg
-          className="mr-footer-svg"
-          viewBox="0 0 277 9.5"
-          preserveAspectRatio="none"
-        >
-          <rect x="0" y="0" width="277" height="9.5" fill="#07355b" />
-          <polygon points="139,0 182.6,0 174,9.5 130,9.5" fill="#f5a000" />
-        </svg>
-        <div className="mr-footer-text">TOGETHER FOR A BRIGHTER TOMORROW</div>
-      </div>
+        <div className="footer-text">TOGETHER FOR A BRIGHTER TOMORROW</div>
+      </footer>
     </div>
   );
 }

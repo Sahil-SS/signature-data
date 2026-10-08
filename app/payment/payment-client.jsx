@@ -25,7 +25,7 @@ import {
 
 import MoneyReceiptTemplate from "@/components/MoneyReceiptTemplate";
 
-import { toWords } from "number-to-words";
+// import { toWords } from "number-to-words";
 
 export default function PaymentClient() {
   const router = useRouter();
@@ -64,6 +64,9 @@ export default function PaymentClient() {
 
   const [isPaymentSuccess, setIsPaymentSuccess] = useState(false);
 
+  // Confetti plays once, then the layer is removed
+  const [showConfetti, setShowConfetti] = useState(false);
+
   const confettiPieces = useMemo(() => {
     return Array.from({ length: 85 }, (_, index) => ({
       id: index,
@@ -82,6 +85,17 @@ export default function PaymentClient() {
     }));
   }, []);
 
+  useEffect(() => {
+    if (!isPaymentSuccess) return;
+
+    setShowConfetti(true);
+
+    // longest piece: 1.5s max delay + 6s max duration = 7.5s
+    const timer = setTimeout(() => setShowConfetti(false), 8000);
+
+    return () => clearTimeout(timer);
+  }, [isPaymentSuccess]);
+
   const generatePDF = useCallback(async () => {
     const element = document.getElementById("receipt");
 
@@ -91,44 +105,96 @@ export default function PaymentClient() {
     }
 
     try {
-      // Wait for fonts + images so html2canvas measures text correctly
-      if (document.fonts?.ready) await document.fonts.ready;
+      /*
+       * Give React/browser one frame to finish rendering
+       * the receipt before html2canvas measures it.
+       */
+      await new Promise((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(resolve);
+        });
+      });
+
+      /*
+       * Wait for fonts.
+       */
+      if (document.fonts?.ready) {
+        await document.fonts.ready;
+      }
+
+      /*
+       * Wait for receipt images.
+       */
       await Promise.all(
-        Array.from(element.querySelectorAll("img")).map((img) =>
-          img.complete
-            ? Promise.resolve()
-            : new Promise((res) => {
-                img.onload = res;
-                img.onerror = res;
-              }),
-        ),
+        Array.from(element.querySelectorAll("img")).map((img) => {
+          if (img.complete) {
+            return Promise.resolve();
+          }
+
+          return new Promise((resolve) => {
+            img.onload = resolve;
+            img.onerror = resolve;
+          });
+        }),
       );
+
+      /*
+       * Small additional delay to make sure layout has
+       * completely settled before html2canvas starts.
+       */
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const html2pdf = (await import("html2pdf.js")).default;
 
       const transactionId = paymentForm.transactionId?.trim() || "receipt";
+
       const filename = `Payment_Receipt_${transactionId}.pdf`;
 
       await html2pdf()
         .set({
-          margin: 10,
+          margin: 0,
+
           filename,
-          image: { type: "jpeg", quality: 0.98 },
+
+          image: {
+            type: "jpeg",
+            quality: 1,
+          },
+
           html2canvas: {
             scale: 2,
             useCORS: true,
+
             backgroundColor: "#ffffff",
+
             logging: false,
+
             scrollX: 0,
             scrollY: 0,
+
+            /*
+             * Make sure the exact receipt dimensions are captured.
+             */
+            width: element.scrollWidth,
+            height: element.scrollHeight,
+
+            windowWidth: element.scrollWidth,
+            windowHeight: element.scrollHeight,
           },
+
           jsPDF: {
             unit: "mm",
-            format: "a4",
+
+            format: [280, 140],
+
             orientation: "landscape",
+
             compress: true,
           },
-          pagebreak: { mode: ["avoid-all"] },
+
+          pagebreak: {
+            mode: ["avoid-all"],
+          },
         })
         .from(element)
         .save();
@@ -136,11 +202,6 @@ export default function PaymentClient() {
       console.error("Receipt generation error:", error);
     }
   }, [paymentForm.transactionId]);
-  useEffect(() => {
-    if (showReceipt && bookingDetails.fullBookingData) {
-      generatePDF();
-    }
-  }, [showReceipt, bookingDetails.fullBookingData, generatePDF]);
 
   useEffect(() => {
     const fetchBookingDetails = async () => {
@@ -331,7 +392,9 @@ export default function PaymentClient() {
 
           animation-timing-function: linear;
 
-          animation-iteration-count: infinite;
+          animation-iteration-count: 1;
+
+          animation-fill-mode: forwards;
 
           pointer-events: none;
         }
@@ -347,10 +410,14 @@ export default function PaymentClient() {
             opacity: 1;
           }
 
+          85% {
+            opacity: 1;
+          }
+
           100% {
             transform: translate3d(80px, 115vh, 0) rotate(720deg);
 
-            opacity: 0.95;
+            opacity: 0;
           }
         }
 
@@ -451,11 +518,7 @@ export default function PaymentClient() {
       {!isPaymentSuccess ? (
         <main className="min-h-screen px-3 py-3 md:px-4 md:py-4 lg:px-4.5">
           <div className="mx-auto max-w-380">
-            {/* =================================================*
-
-*                TOP TITLE*
-
-*            ================================================== */}
+            {/* ================= TOP TITLE ================= */}
 
             <motion.div
               initial={{ opacity: 0, y: -15 }}
@@ -468,11 +531,7 @@ export default function PaymentClient() {
               </h1>
             </motion.div>
 
-            {/* =================================================*
-
-*                MAIN PAYMENT CARD*
-
-*            ================================================== */}
+            {/* ================= MAIN PAYMENT CARD ================= */}
 
             <motion.section
               initial={{ opacity: 0, y: 15 }}
@@ -480,11 +539,7 @@ export default function PaymentClient() {
               transition={{ duration: 0.5 }}
               className="soft-shadow overflow-hidden rounded-[18px] border border-[#dce5ee] bg-white"
             >
-              {/* =================================================*
-
-*                  PAYMENT HEADER*
-
-*              ================================================== */}
+              {/* ================= PAYMENT HEADER ================= */}
 
               <div className="relative overflow-hidden bg-[#082d4a]">
                 <div className="absolute -right-10 -top-16.25 h-45 w-[48%] rotate-[9deg] rounded-[80px] border-b-18 border-[#f4c541]" />
@@ -526,18 +581,10 @@ export default function PaymentClient() {
                 <div className="absolute bottom-0 left-0 h-2 w-full bg-[#f4c541]" />
               </div>
 
-              {/* =================================================*
-
-*                  CONTENT*
-
-*              ================================================== */}
+              {/* ================= CONTENT ================= */}
 
               <div className="px-4 py-4 md:px-7 md:py-5 lg:px-[34px]">
-                {/* =================================================*
-
-*                    INFORMATION ALERT*
-
-*                ================================================== */}
+                {/* ================= INFORMATION ALERT ================= */}
 
                 <div className="mb-4 flex items-center gap-3 rounded-[12px] border border-[#c8e4f8] bg-[#eef8ff] px-4 py-3">
                   <div className="flex h-[32px] w-[32px] shrink-0 items-center justify-center rounded-full bg-[#1674d1] text-white">
@@ -550,15 +597,9 @@ export default function PaymentClient() {
                   </p>
                 </div>
 
-                {/* =================================================*
+                {/* ================= QR PAYMENT SECTION (kept from original, currently disabled) ================= */}
 
-*                    QR PAYMENT SECTION*
-
-*                    Kept from original functionality*
-
-*                ================================================== */}
-
-                <div className="mb-4 rounded-[14px] border border-[#dce7ef] bg-[#f8fbfe] p-3 md:p-4">
+                {/* <div className="mb-4 rounded-[14px] border border-[#dce7ef] bg-[#f8fbfe] p-3 md:p-4">
                   <div className="flex flex-col items-center justify-between gap-3 md:flex-row">
                     <div className="flex items-center gap-4">
                       <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#fff2ca] text-[#0a3150]">
@@ -600,13 +641,9 @@ export default function PaymentClient() {
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
-                {/* =================================================*
-
-*                    PAYMENT INPUTS*
-
-*                ================================================== */}
+                {/* ================= PAYMENT INPUTS ================= */}
 
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -671,11 +708,7 @@ export default function PaymentClient() {
                     </div>
                   </div>
 
-                  {/* =================================================*
-
-*                      BOOKING SUMMARY*
-
-*                  ================================================== */}
+                  {/* ================= BOOKING SUMMARY ================= */}
 
                   {bookingDetails.fullBookingData && (
                     <div className="mt-4 overflow-hidden rounded-[14px] border border-[#f0d57d] bg-[#fffaf0]">
@@ -741,11 +774,7 @@ export default function PaymentClient() {
                     </div>
                   )}
 
-                  {/* =================================================*
-
-*                      SUBMIT*
-
-*                  ================================================== */}
+                  {/* ================= SUBMIT ================= */}
 
                   <div className="flex justify-center pt-4">
                     <motion.button
@@ -779,63 +808,57 @@ export default function PaymentClient() {
         </main>
       ) : (
         <main className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#eef5fb] via-white to-[#f5f9fc] px-3 py-3 md:px-5 md:py-4">
-          {/* =================================================*
+          {/* ================= CONFETTI (plays once) ================= */}
 
-*              CONFETTI*
+          {showConfetti && (
+            <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
+              {confettiPieces.map((piece) => {
+                const shapeClass =
+                  piece.shape === 0
+                    ? "rounded-[1px]"
+                    : piece.shape === 1
+                      ? "rounded-full"
+                      : "rotate-45 rounded-[1px]";
 
-*          ================================================== */}
+                const confettiColors = [
+                  "#e8b532",
 
-          <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
-            {confettiPieces.map((piece) => {
-              const shapeClass =
-                piece.shape === 0
-                  ? "rounded-[1px]"
-                  : piece.shape === 1
-                    ? "rounded-full"
-                    : "rotate-45 rounded-[1px]";
+                  "#0c3153",
 
-              const confettiColors = [
-                "#e8b532",
+                  "#19b95b",
 
-                "#0c3153",
+                  "#e35c78",
 
-                "#19b95b",
+                  "#3d82d7",
+                ];
 
-                "#e35c78",
+                return (
+                  <span
+                    key={piece.id}
+                    className={`confetti-piece ${shapeClass}`}
+                    style={{
+                      left: `${piece.left}%`,
 
-                "#3d82d7",
-              ];
+                      width: `${piece.size}px`,
 
-              return (
-                <span
-                  key={piece.id}
-                  className={`confetti-piece ${shapeClass}`}
-                  style={{
-                    left: `${piece.left}%`,
+                      height: `${piece.size * 1.5}px`,
 
-                    width: `${piece.size}px`,
+                      background:
+                        confettiColors[piece.id % confettiColors.length],
 
-                    height: `${piece.size * 1.5}px`,
+                      animationDelay: `${piece.delay}s`,
 
-                    background:
-                      confettiColors[piece.id % confettiColors.length],
+                      animationDuration: `${piece.duration}s`,
 
-                    animationDelay: `${piece.delay}s`,
+                      transform: `rotate(${piece.rotation}deg)`,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          )}
 
-                    animationDuration: `${piece.duration}s`,
-
-                    transform: `rotate(${piece.rotation}deg)`,
-                  }}
-                />
-              );
-            })}
-          </div>
-
-          {/* =================================================*
-
-*              DECORATIVE BACKGROUND*
-
-*          ================================================== */}
+          {/* ================= DECORATIVE BACKGROUND ================= */}
 
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[260px] overflow-hidden">
             <div className="gold-wave" />
@@ -843,11 +866,7 @@ export default function PaymentClient() {
             <div className="navy-wave" />
           </div>
 
-          {/* =================================================*
-
-*              SUCCESS CARD*
-
-*          ================================================== */}
+          {/* ================= SUCCESS CARD ================= */}
 
           <div className="relative z-10 mx-auto max-w-[1080px]">
             <motion.div
@@ -860,11 +879,7 @@ export default function PaymentClient() {
               }}
               className="overflow-hidden rounded-[22px] border border-[#d8e2eb] bg-white/95 shadow-[0_20px_70px_rgba(15,45,73,0.13)] backdrop-blur"
             >
-              {/* =================================================*
-
-*                  SUCCESS HERO*
-
-*              ================================================== */}
+              {/* ================= SUCCESS HERO ================= */}
 
               <div className="relative px-5 pb-4 pt-4 text-center md:px-8 md:pt-5">
                 {/* Success badge */}
@@ -941,11 +956,7 @@ export default function PaymentClient() {
                 </motion.p>
               </div>
 
-              {/* =================================================*
-
-*                  RECEIPT DETAILS*
-
-*              ================================================== */}
+              {/* ================= RECEIPT DETAILS ================= */}
 
               <div className="px-4 pb-3 md:px-10">
                 <motion.div
@@ -1027,11 +1038,7 @@ export default function PaymentClient() {
                   </div>
                 </motion.div>
 
-                {/* =================================================*
-
-*                    SUPPORT MESSAGE*
-
-*                ================================================== */}
+                {/* ================= SUPPORT MESSAGE ================= */}
 
                 <motion.div
                   initial={{ opacity: 0, y: 15 }}
@@ -1056,11 +1063,7 @@ export default function PaymentClient() {
                   </div>
                 </motion.div>
 
-                {/* =================================================*
-
-*                    DOWNLOAD BUTTON*
-
-*                ================================================== */}
+                {/* ================= DOWNLOAD BUTTON ================= */}
 
                 <motion.div
                   initial={{ opacity: 0, y: 15 }}
@@ -1091,11 +1094,7 @@ export default function PaymentClient() {
         </main>
       )}
 
-      {/* =========================================================*
-
-*          ERROR / STATUS POPUP*
-
-*      ========================================================= */}
+      {/* ================= ERROR / STATUS POPUP ================= */}
 
       <AnimatePresence>
         {popup && popup.type === "error" && (
@@ -1135,20 +1134,17 @@ export default function PaymentClient() {
         )}
       </AnimatePresence>
 
-      {/* =========================================================*
-
-*          HIDDEN RECEIPT*
-
-*          Required by existing PDF functionality*
-
-*      ========================================================= */}
+      {/* ================= HIDDEN RECEIPT (required by PDF functionality) ================= */}
 
       <div
         style={{
-          position: "absolute",
-          left: "-9999px",
+          position: "fixed",
+          left: "-10000px",
           top: 0,
-          width: "277mm",
+          width: "280mm",
+          height: "140mm",
+          overflow: "hidden",
+          pointerEvents: "none",
         }}
       >
         {showReceipt && bookingDetails.fullBookingData && (
@@ -1157,21 +1153,20 @@ export default function PaymentClient() {
               name:
                 bookingDetails.fullBookingData.customer?.fullName ||
                 customerName,
+
               amount: paymentForm.amountPaid,
-              amountWords: toWords(
-                Number(paymentForm.amountPaid) || 0,
-              ).toUpperCase(),
+
               projectName:
                 bookingDetails.fullBookingData.property?.projectName || "",
-              branch:
-                bookingDetails.fullBookingData.branch ||
-                bookingDetails.fullBookingData.property?.branch ||
-                bookingDetails.fullBookingData.property?.projectLocation ||
-                "",
+
               transactionId: paymentForm.transactionId,
+
               paymentMode: paymentForm.paymentMethod?.toUpperCase() || "UPI",
+
               paymentDate: new Date().toLocaleDateString("en-IN"),
+
               receiptNo: paymentForm.transactionId,
+
               date: new Date().toLocaleDateString("en-IN"),
             }}
           />
