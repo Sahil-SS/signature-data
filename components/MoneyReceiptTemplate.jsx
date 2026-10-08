@@ -237,7 +237,7 @@ export default function MoneyReceiptTemplate({ data = {} }) {
           <div className="receipt-colon">:</div>
 
           <div className="receipt-value">
-            Associate Membership Fee for {projectName}
+            Associate Membership Fee for Signature Associate Membership Program
           </div>
         </div>
 
@@ -259,10 +259,25 @@ export default function MoneyReceiptTemplate({ data = {} }) {
                       isSelected ? "checked" : ""
                     }`}
                   >
-                    {isSelected ? "✓" : ""}
+                    {isSelected && (
+                      <svg
+                        className="payment-tick"
+                        viewBox="0 0 10 10"
+                        preserveAspectRatio="xMidYMid meet"
+                      >
+                        <path
+                          d="M2 5.2l2 2.1 4-4.8"
+                          stroke="#0b3155"
+                          strokeWidth="1.5"
+                          fill="none"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
                   </span>
 
-                  {mode}
+                  <span className="payment-option-text">{mode}</span>
                 </span>
               );
             })}

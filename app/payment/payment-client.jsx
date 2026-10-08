@@ -647,9 +647,9 @@ export default function PaymentClient() {
 
                 <form onSubmit={handleSubmit}>
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                    {/* Amount Paid */}
+                    {/* Amount Paid (below UTR on mobile, left on desktop) */}
 
-                    <div>
+                    <div className="order-2 md:order-1">
                       <label className="mb-2 block text-[16px] font-semibold text-[#10213f]">
                         Amount Paid (₹){" "}
                         <span className="text-[#df2525]">*</span>
@@ -678,9 +678,9 @@ export default function PaymentClient() {
                       </p>
                     </div>
 
-                    {/* Transaction ID */}
+                    {/* Transaction ID (above Amount on mobile, right on desktop) */}
 
-                    <div>
+                    <div className="order-1 md:order-2">
                       <label className="mb-2 block text-[16px] font-semibold text-[#10213f]">
                         Transaction ID / UTR Number{" "}
                         <span className="text-[#df2525]">*</span>

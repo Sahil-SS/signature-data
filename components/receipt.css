@@ -338,6 +338,14 @@
 
 /* =========================================================
    PAYMENT MODES
+
+   html2canvas renders text glyphs (like "✓") and inline-flex
+   baselines slightly differently from the browser, which made
+   the boxes/ticks look misaligned in the PDF. So:
+   - every option is a plain block flex row with a fixed height
+   - the box and the label share the SAME fixed height and
+     line-height, so they are centred on each other
+   - the tick is an SVG drawn inside the box (no font glyph)
    ========================================================= */
 
 .payment-mode-row {
@@ -353,17 +361,19 @@
 
   min-width: 0;
 
-  padding-bottom: 1.2mm;
+  padding-bottom: 0;
 }
 
 .payment-option {
-  display: inline-flex;
+  display: flex;
 
   align-items: center;
 
-  gap: 1.5mm;
+  flex: 0 0 auto;
 
-  font-size: 2.85mm;
+  height: 5mm;
+
+  gap: 1.8mm;
 
   white-space: nowrap;
 
@@ -371,29 +381,50 @@
 }
 
 .payment-checkbox {
-  width: 3.5mm;
-  height: 3.5mm;
+  display: block;
 
-  display: inline-flex;
+  position: relative;
 
-  align-items: center;
-  justify-content: center;
+  flex: 0 0 3.6mm;
+
+  width: 3.6mm;
+  height: 3.6mm;
 
   box-sizing: border-box;
 
   border: 0.3mm solid #788695;
 
-  color: #0b3155;
+  border-radius: 0.4mm;
 
-  font-size: 2.6mm;
-
-  font-weight: 800;
-
-  line-height: 1;
+  background: #ffffff;
 }
 
 .payment-checkbox.checked {
   border-color: #0b3155;
+}
+
+.payment-tick {
+  position: absolute;
+
+  left: 0;
+  top: 0;
+
+  display: block;
+
+  width: 100%;
+  height: 100%;
+}
+
+.payment-option-text {
+  display: block;
+
+  height: 3.6mm;
+
+  margin: 0;
+  padding: 0;
+
+  font-size: 2.85mm;
+  line-height: 3.6mm;
 }
 
 /* =========================================================
